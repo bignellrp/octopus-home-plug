@@ -1,5 +1,5 @@
 # octopus-home-plug
-A python app for controlling the SmartLife plug based on the cheapest Octopus rates
+A python app for controlling the TP-LINK TIPO plug based on the cheapest Octopus rates
 
 Controlling a smart plug based on electricity rates from the Octopus Energy API is a multi-step process. The basic steps are:
 
