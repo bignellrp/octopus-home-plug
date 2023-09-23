@@ -26,3 +26,7 @@ test_plug.py can be used to test the plug is working before setting the main.py 
 With all the functions set up, you can fetch the rates daily, determine the cheapest rate, and then set your smart plug to activate at that time. One way to do this is to build a container with github actions and run the main.py on a cron every 30 minutes.
 
 This is a very basic and generalised overview. Depending on your requirements, you might need to add additional error handling, logging, web frontend, more specific time parsing, and other refinements.
+
+# Optional. Discord alerts
+
+If you have a Discord server you can create a webhook and update a channel when the plug is activated.

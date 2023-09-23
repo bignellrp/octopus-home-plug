@@ -19,6 +19,7 @@ API_ENDPOINT = f"{BASEURL}/v1/products/{PRODUCT}/electricity-tariffs/{TARIFF}/st
 EMAIL = os.environ["EMAIL"]
 PASSWORD = os.environ["PASSWORD"]
 SMART_PLUG_IP = os.environ["SMART_PLUG_IP"]
+WEBHOOK = os.environ["DISCORD_WEBHOOK"]
 
 def fetch_rates():
     headers = {
@@ -29,6 +30,13 @@ def fetch_rates():
         return response.json()
     else:
         response.raise_for_status()
+
+def post_to_discord(message):
+    data = {
+        "content": message
+    }
+    response = requests.post(WEBHOOK, data=data)
+    return response.status_code
 
 def control_smart_plug(action):
     # Create a logger
@@ -53,10 +61,14 @@ def control_smart_plug(action):
         # Control the smart plug based on the action
         if action == "on":
             plug.turnOn()
-            print(f"Turned on the smart plug at {formatted_dt} due to low rate.")
+            message = f"Turned on the smart plug at {formatted_dt} due to low rate."
+            print(message)
+            status_code = post_to_discord(message)
         elif action == "off":
             plug.turnOff()
-            print(f"Turned off the smart plug at {formatted_dt} due to high rate.")
+            message = f"Turned off the smart plug at {formatted_dt} due to high rate."
+            print(message)
+            status_code = post_to_discord(message)
     except Exception as e:
         logger.error('Failed to control the smart plug: %s', e)
 
