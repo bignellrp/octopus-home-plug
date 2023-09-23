@@ -20,6 +20,7 @@ EMAIL = os.environ["EMAIL"]
 PASSWORD = os.environ["PASSWORD"]
 SMART_PLUG_IP = os.environ["SMART_PLUG_IP"]
 WEBHOOK = os.environ["DISCORD_WEBHOOK"]
+LOG_FILE = "/var/log/cron.log"
 
 def fetch_rates():
     headers = {
@@ -58,17 +59,36 @@ def control_smart_plug(action):
         # Format the datetime object
         formatted_dt = dt.strftime("%Y-%m-%d %H:%M")
 
+        # Get the last line of the log file
+        try:
+            with open(LOG_FILE, 'r') as f:
+                last_line = f.readlines()[-1]
+        except Exception as e:
+            logger.error('Failed to open log file', e)
+            last_line = ""
+
         # Control the smart plug based on the action
         if action == "on":
             plug.turnOn()
             message = f"Turned on the smart plug at {formatted_dt} due to low rate."
-            print(message)
-            status_code = post_to_discord(message)
+
+            # Only alert if status changed
+            if "on" in last_line:
+                return
+            else:
+                print(message)
+                status_code = post_to_discord(message)
+
         elif action == "off":
             plug.turnOff()
             message = f"Turned off the smart plug at {formatted_dt} due to high rate."
-            print(message)
-            status_code = post_to_discord(message)
+
+            # Only alert if status changed
+            if "off" in last_line:
+                return
+            else:
+                print(message)
+                status_code = post_to_discord(message)
     except Exception as e:
         logger.error('Failed to control the smart plug: %s', e)
 
@@ -104,11 +124,9 @@ def main():
             if value_inc_vat < 18.0:
                 action = "on"
                 control_smart_plug(action)
-                print(f"Rate : {value_inc_vat} p/kWh.")
             else:
                 action = "off"
                 control_smart_plug(action)
-                print(f"Rate : {value_inc_vat} p/kWh.")
 
 if __name__ == "__main__":
     main()
