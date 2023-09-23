@@ -9,9 +9,3 @@ services:
       - /mnt/docker/octopus-home-plug/.env
     environment:
       - TZ=Europe/London
-    networks:
-      - bridge
-
-networks:
-  bridge:
-    external: true
