@@ -9,3 +9,9 @@ services:
       - /mnt/docker/octopus-home-plug/.env
     environment:
       - TZ=Europe/London
+    networks:
+      - br1
+
+networks:
+  br1:
+    driver: bridge
