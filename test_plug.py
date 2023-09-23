@@ -1,18 +1,26 @@
-from kasa import SmartPlug
-import asyncio
+import os
+from dotenv import load_dotenv
+from PyP100 import PyP100
 
-async def activate_smart_plug(ip_address):
-    plug = SmartPlug(ip_address)
-    
-    # Update the device state:
-    await plug.update()
+# Load values from .env
+load_dotenv()
 
-    # Print basic device info:
-    print(f"Device at {ip_address} is {plug.alias} model of type {plug.device_type}.")
-    
-    # Turn on the plug:
-    await plug.turn_on()
+# Access the API key
+EMAIL = os.environ["EMAIL"]
+PASSWORD = os.environ["PASSWORD"]
+SMART_PLUG_IP = os.environ["SMART_PLUG_IP"]
 
-# To run the asynchronous function:
-loop = asyncio.get_event_loop()
-loop.run_until_complete(activate_smart_plug("YOUR_PLUG_IP_ADDRESS"))
+def control_smart_plug(action):
+    plug = PyP100.P100(SMART_PLUG_IP, EMAIL, PASSWORD)
+
+    plug.handshake() #Creates the cookies required for further methods
+    plug.login() #Sends credentials to the plug and creates AES Key and IV for further methods
+
+    if action == "on":
+        plug.turnOn()
+        print("Turned on the smart plug due to low rate.")
+    elif action == "off":
+        plug.turnOff()
+        print("Turned off the smart plug due to high rate.")
+
+control_smart_plug("on")
