@@ -15,10 +15,11 @@ COPY . /app
 
 # Install cron and setup cron job
 RUN apt-get update && apt-get -y install cron \
-    && echo "*/30 * * * * $HOME/.bashrc; /usr/local/bin/python /app/main.py >> /var/log/cron.log 2>&1" | crontab -
+    && echo "*/30 * * * * /usr/local/bin/python /app/main.py >> /var/log/cron.log 2>&1" | crontab -
 
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+#CMD cron && tail -f /var/log/cron.log
+CMD ["/bin/bash", "-c", "printenv > /etc/environment && cron -f && tail -f /var/log/cron.log"]
