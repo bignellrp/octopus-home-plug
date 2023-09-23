@@ -3,9 +3,16 @@ version: '3.8'
 services:
   octopus-home-plug:
     image: ghcr.io/bignellrp/octopus-home-plug:main
+    networks:
+      - br1
     container_name: octopus-home-plug
     restart: always
     env_file:
       - /mnt/docker/octopus-home-plug/.env
     environment:
       - TZ=Europe/London
+
+networks:
+  br1:
+    external: true
+    name: br1
