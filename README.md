@@ -30,3 +30,7 @@ This is a very basic and generalised overview. Depending on your requirements, y
 # Optional. Discord alerts
 
 If you have a Discord server you can create a webhook and update a channel when the plug is activated.
+
+# Optional. Rate command
+
+Using a Dockerfile run command you can add an alias for getting the current rate just by typing "rate" on the container's cli

@@ -17,9 +17,11 @@ COPY . /app
 RUN apt-get update && apt-get -y install cron \
     && echo "*/30 * * * * (/usr/local/bin/python /app/main.py | tee -a /var/log/cron.log) 2>&1" | crontab -
 
-
 # Create the log file to be able to run tail
 RUN touch /var/log/cron.log
+
+# Add alias to run rate.py
+RUN echo "alias rate='/usr/local/bin/python /app/rate.py'" >> ~/.bashrc && source ~/.bashrc
 
 # Run the command on container startup
 #CMD cron && tail -f /var/log/cron.log
