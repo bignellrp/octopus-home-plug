@@ -21,8 +21,7 @@ RUN apt-get update && apt-get -y install cron \
 RUN touch /var/log/cron.log
 
 # Add alias to run rate.py
-RUN echo "alias rate='/usr/local/bin/python /app/rate.py'" >> ~/.bashrc && source ~/.bashrc
+RUN echo "alias rate='/usr/local/bin/python /app/rate.py'" >> ~/.bashrc
 
 # Run the command on container startup
-#CMD cron && tail -f /var/log/cron.log
 CMD ["/bin/bash", "-c", "printenv > /etc/environment && cron -f"]
