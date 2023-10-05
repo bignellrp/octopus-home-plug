@@ -34,3 +34,7 @@ If you have a Discord server you can create a webhook and update a channel when 
 # Optional. Rate command
 
 Using a Dockerfile run command you can add an alias for getting the current rate just by typing "rate" on the container's cli
+
+# Optional. Only charge if Fordpass under 100%
+
+Using the FordPass api it was possible to pull the charging status of your Ford. Unfortunately Ford pulled support for this in 2022. Leaving the test_fordpass.py code in case they reenable support in the future.

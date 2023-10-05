@@ -1,5 +1,7 @@
+asyncio==3.4.3
 certifi==2023.7.22
 charset-normalizer==3.2.0
+fordpass==0.0.5
 idna==3.4
 pkcs7==0.1.2
 pycryptodome==3.19.0
@@ -7,4 +9,5 @@ PyP100==0.1.2
 python-dotenv==1.0.0
 pytz==2023.3.post1
 requests==2.31.0
+upgrade-requirements==1.7.0
 urllib3==2.0.5
