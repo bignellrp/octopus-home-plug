@@ -1,7 +1,7 @@
 import requests
 import os
 import pytz
-from datetime import datetime
+from datetime import datetime, timedelta
 from PyP100 import PyP100
 from dotenv import load_dotenv
 import logging
@@ -39,7 +39,7 @@ def post_to_discord(message):
     response = requests.post(WEBHOOK, data=data)
     return response.status_code
 
-def control_smart_plug(action):
+def control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs):
     # Create a logger
     logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ def control_smart_plug(action):
         # Control the smart plug based on the action
         if action == "on":
             plug.turnOn()
-            message = f"Turned on the smart plug at {formatted_dt} due to low rate."
+            message = f"Plug turned ON at {formatted_dt} as rate {value_inc_vat} is below {int(avg_rate_next_12_hrs)}."
 
             # Only alert if status changed
             if "on" in last_line:
@@ -81,7 +81,7 @@ def control_smart_plug(action):
 
         elif action == "off":
             plug.turnOff()
-            message = f"Turned off the smart plug at {formatted_dt} due to high rate."
+            message = f"Plug turned OFF at {formatted_dt} as rate {value_inc_vat} is above {int(avg_rate_next_12_hrs)}."
 
             # Only alert if status changed
             if "off" in last_line:
@@ -98,35 +98,55 @@ def convert_to_bst(utc_time_str):
     bst_time = utc_time.astimezone(bst_timezone)
     return bst_time
 
+def within_next_12_hours(from_time, to_time, current_time):
+    twelve_hrs_later = current_time + timedelta(hours=12)
+    return from_time <= twelve_hrs_later and (to_time is None or to_time > current_time)
+
 def main():
     rates_data = fetch_rates()
 
     # Get current time in bst timezone
     current_time_bst = datetime.now(pytz.timezone("Europe/London"))
+    
+    average_rate_for_next_12_hrs = []
 
     for rate in rates_data["results"]:
         valid_from_bst = convert_to_bst(rate["valid_from"])
+        valid_to = rate.get("valid_to", "Ongoing")
 
-        # Compare rate's validity period with the current time
-        if valid_from_bst <= current_time_bst:
-            valid_to = rate.get("valid_to", "Ongoing")
-            
-            if valid_to != "Ongoing":
-                valid_to_bst = convert_to_bst(valid_to)
+        if valid_to != "Ongoing":
+            valid_to_bst = convert_to_bst(valid_to)
+        else:
+            valid_to_bst = None
 
-                # If the rate is expired then skip this iteration
-                if valid_to_bst < current_time_bst:
-                    continue
+        if within_next_12_hours(valid_from_bst, valid_to_bst, current_time_bst):
+            value_inc_vat = float(rate["value_inc_vat"])  # Ensure value is a float
+            average_rate_for_next_12_hrs.append(value_inc_vat)  # Add rate to list
 
-            value_inc_vat = float(rate["value_inc_vat"])  # Ensure value is a float for comparison
-        
-            # Control the smart plug based on the rate
-            if value_inc_vat < 18.0:
-                action = "on"
-                control_smart_plug(action)
-            else:
-                action = "off"
-                control_smart_plug(action)
+    # Compute average if list is not empty
+    if average_rate_for_next_12_hrs:
+        avg_rate_next_12_hrs = sum(average_rate_for_next_12_hrs) / len(average_rate_for_next_12_hrs)
+
+        for rate in rates_data["results"]:
+            valid_from_bst = convert_to_bst(rate["valid_from"])
+
+            if valid_from_bst <= current_time_bst:
+                valid_to = rate.get("valid_to", "Ongoing")
+                
+                if valid_to != "Ongoing":
+                    valid_to_bst = convert_to_bst(valid_to)
+
+                    if valid_to_bst < current_time_bst:
+                        continue
+
+                value_inc_vat = float(rate["value_inc_vat"])
+
+                if value_inc_vat < avg_rate_next_12_hrs:
+                    action = "on"
+                    control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
+                else:
+                    action = "off"
+                    control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
 
 if __name__ == "__main__":
     main()
