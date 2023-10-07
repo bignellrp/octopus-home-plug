@@ -21,6 +21,8 @@ PASSWORD = os.environ["PASSWORD"]
 SMART_PLUG_IP = os.environ["SMART_PLUG_IP"]
 WEBHOOK = os.environ["DISCORD_WEBHOOK"]
 LOG_FILE = "/var/log/cron.log"
+MAXIMUM_RATE = 16 # Set your desired maximum rate here.
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 def fetch_rates():
     headers = {
@@ -123,9 +125,10 @@ def main():
             value_inc_vat = float(rate["value_inc_vat"])  # Ensure value is a float
             average_rate_for_next_12_hrs.append(value_inc_vat)  # Add rate to list
 
-    # Compute average if list is not empty
+    # Compute average if list is not empty. If calculated average is greater than MAXIMUM_RATE,
+    # set avg_rate_next_12_hrs as MAXIMUM_RATE
     if average_rate_for_next_12_hrs:
-        avg_rate_next_12_hrs = sum(average_rate_for_next_12_hrs) / len(average_rate_for_next_12_hrs)
+        avg_rate_next_12_hrs = min(sum(average_rate_for_next_12_hrs) / len(average_rate_for_next_12_hrs), MAXIMUM_RATE)
 
         for rate in rates_data["results"]:
             valid_from_bst = convert_to_bst(rate["valid_from"])
@@ -143,10 +146,16 @@ def main():
 
                 if value_inc_vat < avg_rate_next_12_hrs:
                     action = "on"
-                    control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
+                    if DEBUG:
+                        print(f"Plug turned ON as rate {value_inc_vat} is below {int(avg_rate_next_12_hrs)}.")
+                    else:
+                        control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
                 else:
                     action = "off"
-                    control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
+                    if DEBUG:
+                        print(f"Plug turned OFF as rate {value_inc_vat} is above {int(avg_rate_next_12_hrs)}.")
+                    else:
+                        control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs)
 
 if __name__ == "__main__":
     main()
