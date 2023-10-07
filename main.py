@@ -75,7 +75,7 @@ def control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs):
             message = f"Plug turned ON at {formatted_dt} as rate {value_inc_vat} is below {int(avg_rate_next_12_hrs)}."
 
             # Only alert if status changed
-            if "on" in last_line:
+            if "ON" in last_line:
                 return
             else:
                 print(message)
@@ -86,7 +86,7 @@ def control_smart_plug(action,value_inc_vat,avg_rate_next_12_hrs):
             message = f"Plug turned OFF at {formatted_dt} as rate {value_inc_vat} is above {int(avg_rate_next_12_hrs)}."
 
             # Only alert if status changed
-            if "off" in last_line:
+            if "OFF" in last_line:
                 return
             else:
                 print(message)
